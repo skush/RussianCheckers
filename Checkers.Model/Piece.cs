@@ -7,7 +7,6 @@ using Checkers.Model.Exceptions;
 
 namespace Checkers.Model
 {
-    // a shortcat - we skip AbstractPiece class to make it simple
     public class Piece
     {
         protected PieceColor color;
@@ -31,67 +30,51 @@ namespace Checkers.Model
             this.isQueen = isQueen;
         }
 
-        public static List<Move> GetOneStepCaptureMoves(Piece piece, Board board, IEnumerable<Piece> capturedPieces)
+        private static List<SequantialCapture> GetCaptureMovesRecursive(Piece piece, Board board, SequantialCapture oriMove)
         {
-            List<Move> moves = new List<Move>();
+            List<SequantialCapture> moves = new List<SequantialCapture>();
             foreach (Directions dir in Enum.GetValues(typeof(Directions)))
             {
-                Square dest = board.GetSquare(piece.Coordinate, dir, 2);
-                if ((dest != null) && (board.GetPieceByCoordinate(dest) == null))
+                Square start = (oriMove != null) ? oriMove.End : piece.Coordinate;
+                Square dest = board.GetSquare(start, dir, 2);
+
+                if ((dest != null)
+                    && (board.GetPieceByCoordinate(dest) == null
+                    //piece can still return back to its square
+                    || (dest.X == piece.Coordinate.X && dest.Y == piece.Coordinate.Y)))
                 {
-                    Piece capture = board.GetPieceByCoordinate(board.GetSquare(piece.Coordinate, dir, 1));
-                    if (capture != null && capture.Color != piece.Color && !capturedPieces.Any(cp => cp.Coordinate == capture.Coordinate))
+                    Piece capture = board.GetPieceByCoordinate(board.GetSquare(start, dir, 1));
+                    if (capture != null && capture.Color != piece.Color)
                     {
-                        moves.Add(new SequantialCapture(piece.Coordinate, new List<Square>() { new Square(dest.X, dest.Y) }, capture));
+                        SequantialCapture newMove = null;
+                        if (oriMove != null)
+                        {
+                            if(!oriMove.Captured.Any(cp => cp.Coordinate == capture.Coordinate))
+                            {
+                                newMove = new SequantialCapture(oriMove);
+                                newMove.MoveSequance.Add(new Square(dest.X, dest.Y));
+                                newMove.Captured.Add(capture);
+                            }
+                        }
+                        else
+                        {
+                            newMove = new SequantialCapture(start, new List<Square> { dest }, capture);
+                        }
+                        if (newMove != null)
+                        {
+                            List<SequantialCapture> moves2add = GetCaptureMovesRecursive(piece, board, newMove);
+                            if (moves2add != null)
+                                moves.AddRange(moves2add);
+                        }
                     }
                 }
             }
-            return moves;
-        }
-
-        /// <summary>
-        /// gets simple one step capture moves - moves that kill opponent's pieces
-        /// </summary>
-        /// <param name="piece"></param>
-        /// <param name="board"></param>
-        /// <returns></returns>
-        public static IEnumerable<Move> GetSingleCaptureMoves(Piece piece, Board board)
-        {
-            Board tempBoard = new Board(board, piece);
-            return GetOneStepCaptureMoves(piece, tempBoard, new List<Piece>());
-        }
-
-        //
-        public static IEnumerable<SequantialCapture> GetCaptureMovesRecursive(List<SequantialCapture> moves, Board tempBoard)
-        {
-            List<SequantialCapture> extMoves = new List<SequantialCapture>();
-            foreach (var move in moves)
-            {
-                var piece = new Piece(move.Color, move.End);
-                var newMoves = GetOneStepCaptureMoves(piece, tempBoard, move.Captured);
-                if (newMoves.Count() == 0)
-                {
-                    extMoves.Add(move);
-                }
-                else
-                {
-                    foreach (var m in newMoves)
-                    {
-                        var newMove = new SequantialCapture(move);
-                        newMove.MoveSequance.Add(m.End);
-                        extMoves.Add(newMove);
-                    }
-                }
-            }
-            return extMoves;
-        }
-
-        public static IEnumerable<Move> GetMultiStepCaptureMoves(Piece piece, Board board)
-        {
-            Board tempBoard = new Board(board, piece);
-            IEnumerable<SequantialCapture> initialMoves = GetOneStepCaptureMoves(piece, tempBoard, new List<Piece>()).Cast<SequantialCapture>();
-            IEnumerable<SequantialCapture> moves = GetCaptureMovesRecursive(initialMoves.ToList(), tempBoard);
-            return moves;
+            if (moves.Count() > 0)
+                return moves;
+            else if(oriMove != null)
+                return new List<SequantialCapture>() { oriMove };
+            else
+                return new List<SequantialCapture>();
         }
 
         public static IEnumerable<Move> GetSimpleMoves(Piece piece, Board board)
@@ -121,7 +104,7 @@ namespace Checkers.Model
             List<Move> moves = new List<Move>();
             foreach (Piece piece in board.GetPiecesByColor(colorOfNextMove))
             {
-                moves.AddRange(Piece.GetMultiStepCaptureMoves(piece, board));
+                moves.AddRange(GetCaptureMovesRecursive(piece, board, null));
             }
 
             if (moves.Count == 0)
