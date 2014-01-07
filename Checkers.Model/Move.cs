@@ -36,12 +36,31 @@ namespace Checkers.Model
 
     public class SequantialCapture : Move
     {
-        public IEnumerable<Square> MoveSequance;
+        public IList<Square> MoveSequance;
 
-        public SequantialCapture(Square start, IEnumerable<Square> sequence)
+        public PieceColor Color;
+
+        public IList<Piece> Captured;
+
+        public SequantialCapture(Square start, IList<Square> sequence, Piece capturedPiece)
         {
             this.start = start;
             MoveSequance = sequence;
+            Captured = new List<Piece>();
+            Captured.Add(capturedPiece);
+        }
+
+        public SequantialCapture(SequantialCapture originalMove)
+        {
+            this.start = new Square(originalMove.Start.X, originalMove.Start.Y);
+            var sequance = new List<Square>();
+            foreach (var point in originalMove.MoveSequance)
+                sequance.Add(point);
+            this.MoveSequance = sequance;
+            var captured = new List<Piece>();
+            foreach (var cp in originalMove.Captured)
+                captured.Add(cp);
+            this.Captured = captured;
         }
 
         public override Square End
@@ -50,6 +69,17 @@ namespace Checkers.Model
             {
                 return MoveSequance.Last();
             }
+        }
+
+        public override string ToString()
+        {
+            // StringBuilder is not efficient here
+            String res = Start.ToString();
+            foreach (Square point in MoveSequance)
+            {
+                res += " - " + point.ToString();
+            }
+            return res;
         }
     }
 }

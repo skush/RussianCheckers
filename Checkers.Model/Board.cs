@@ -12,8 +12,6 @@ namespace Checkers.Model
             get { return pieces; }
         }
 
-        ////protected Board() { }
-
         public Board(IEnumerable<Piece> pieces)
         {
             this.pieces = pieces.ToList();
@@ -25,6 +23,11 @@ namespace Checkers.Model
             pieces = new List<Piece>();
             foreach(Piece p in board.pieces)
                 pieces.Add(new Piece(p.Color, p.Coordinate));
+        }
+
+        public Board(Board board, Piece pieceToRemove) : this(board)
+        {
+            pieces.Remove(GetPieceByCoordinate(pieceToRemove.Coordinate));
         }
 
         public IEnumerable<Piece> GetPiecesByColor(PieceColor color)
@@ -65,19 +68,6 @@ namespace Checkers.Model
             if (x >= 0 && x < Common.BoradLength && y >= 0 && y < Common.BoradLength)
                 return new Square(x, y);
             return null;
-        }
-
-        public void MakeQueen(Square coordinate)
-        {
-            Piece piece = GetPieceByCoordinate(coordinate);
-            Piece queen = Queen.MakeQueen(piece);
-            pieces.Remove(piece);
-            pieces.Add(queen);
-        }
-
-        public void MakeQueen(string coordinate)
-        {
-            MakeQueen(Square.ParseCoordinates(coordinate));
         }
 
         public override string ToString()

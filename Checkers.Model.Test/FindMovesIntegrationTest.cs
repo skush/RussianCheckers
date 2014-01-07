@@ -37,7 +37,7 @@ namespace Checkers.Model.Test
                 Board.ParseBoard("wa1;bb2;bc3;wa7")
             });
             boards.Add(TestBoardTypes.MultiStep, new List<Board>{
-                Board.ParseBoard("we3;bg3;bf4;wf6") });
+                Board.ParseBoard("we3;wg3;bf4;bf6") });
             boards.Add(TestBoardTypes.Void, new List<Board>{
                 Board.ParseBoard("wb8;wd8;wf8;wh8;ba1;bc1;be1")
             });
@@ -149,25 +149,7 @@ namespace Checkers.Model.Test
         [TestMethod]
         public void Board_WithSimpleMoves_ReturnMoves()
         {
-            //AssertByType(TestBoardTypes.Simple);
-            TestBoardTypes testType = TestBoardTypes.Simple;
-            int boardCount = 1;
-            foreach (Board b in GetTestBoards(testType))
-            {
-                foreach (IntegrationTestResult res in GetResults(testType, boardCount))
-                {
-                    List<String> expected = res.moves;
-                    IEnumerable<Move> actual = Piece.GetAllMoves(b, res.NextMove);
-                    Assert.AreEqual<int>(expected.Count(), actual.Count(), "count of moves");
-                    int moveCount = 0;
-                    foreach (Move move in actual)
-                    {
-                        Assert.AreEqual<String>(expected[moveCount], move.ToString());
-                        moveCount++;
-                    }
-                }
-                boardCount++;
-            }
+            AssertByType(TestBoardTypes.Simple);
         }
 
         [TestMethod]

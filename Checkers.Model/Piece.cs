@@ -18,14 +18,20 @@ namespace Checkers.Model
 
         protected Square coordinate;
         public Square Coordinate { get { return coordinate; } }
+
+        protected bool isQueen;
+        public bool IsQueen { get { return isQueen; } }
+
+        public Piece(PieceColor color, Square square) : this(color, square, false) { }
         
-        public Piece(PieceColor color, Square square)
+        public Piece(PieceColor color, Square square, bool isQueen)
         {
             this.color = color;
-            coordinate = square;
+            this.coordinate = square;
+            this.isQueen = isQueen;
         }
 
-        public static IEnumerable<Move> GetOneStepCaptureMoves(Piece piece, Board board)
+        public static List<Move> GetOneStepCaptureMoves(Piece piece, Board board, IEnumerable<Piece> capturedPieces)
         {
             List<Move> moves = new List<Move>();
             foreach (Directions dir in Enum.GetValues(typeof(Directions)))
@@ -34,9 +40,9 @@ namespace Checkers.Model
                 if ((dest != null) && (board.GetPieceByCoordinate(dest) == null))
                 {
                     Piece capture = board.GetPieceByCoordinate(board.GetSquare(piece.Coordinate, dir, 1));
-                    if (capture != null && capture.Color != piece.Color)
+                    if (capture != null && capture.Color != piece.Color && !capturedPieces.Any(cp => cp.Coordinate == capture.Coordinate))
                     {
-                        moves.Add(new SequantialCapture(piece.Coordinate, new List<Square>(){ dest }));
+                        moves.Add(new SequantialCapture(piece.Coordinate, new List<Square>() { new Square(dest.X, dest.Y) }, capture));
                     }
                 }
             }
@@ -51,21 +57,46 @@ namespace Checkers.Model
         /// <returns></returns>
         public static IEnumerable<Move> GetSingleCaptureMoves(Piece piece, Board board)
         {
-            TempBoard tempBoard = new TempBoard(board, piece);
-            return GetOneStepCaptureMoves(piece, tempBoard);
+            Board tempBoard = new Board(board, piece);
+            return GetOneStepCaptureMoves(piece, tempBoard, new List<Piece>());
+        }
+
+        //
+        public static IEnumerable<SequantialCapture> GetCaptureMovesRecursive(List<SequantialCapture> moves, Board tempBoard)
+        {
+            List<SequantialCapture> extMoves = new List<SequantialCapture>();
+            foreach (var move in moves)
+            {
+                var piece = new Piece(move.Color, move.End);
+                var newMoves = GetOneStepCaptureMoves(piece, tempBoard, move.Captured);
+                if (newMoves.Count() == 0)
+                {
+                    extMoves.Add(move);
+                }
+                else
+                {
+                    foreach (var m in newMoves)
+                    {
+                        var newMove = new SequantialCapture(move);
+                        newMove.MoveSequance.Add(m.End);
+                        extMoves.Add(newMove);
+                    }
+                }
+            }
+            return extMoves;
         }
 
         public static IEnumerable<Move> GetMultiStepCaptureMoves(Piece piece, Board board)
         {
-            TempBoard tempBoard = new TempBoard(board, piece);
-            List<Move> moves = new List<Move>();
-            moves.AddRange(GetOneStepCaptureMoves(piece, tempBoard));
+            Board tempBoard = new Board(board, piece);
+            IEnumerable<SequantialCapture> initialMoves = GetOneStepCaptureMoves(piece, tempBoard, new List<Piece>()).Cast<SequantialCapture>();
+            IEnumerable<SequantialCapture> moves = GetCaptureMovesRecursive(initialMoves.ToList(), tempBoard);
             return moves;
         }
 
         public static IEnumerable<Move> GetSimpleMoves(Piece piece, Board board)
         {
-            TempBoard tempBoard = new TempBoard(board, piece);
+            Board tempBoard = new Board(board, piece);
             List<Move> moves = new List<Move>();
             IEnumerable<Directions> directions = DirectionUtils.GetDirections(piece.Color);
             foreach (Directions dir in directions)
@@ -78,25 +109,6 @@ namespace Checkers.Model
             }
             return moves;
         }
-
-        ////public static IEnumerable<Move> GetSingleCaptures(Board board, PieceColor colorOfNextMove)
-        ////{
-        ////    List<Move> moves = new List<Move>();
-        ////    foreach (Piece piece in board.GetPiecesByColor(colorOfNextMove))
-        ////    {
-        ////        moves.AddRange(Piece.GetMultiStepCaptureMoves(piece, board));
-        ////    }
-
-        ////    if (moves.Count == 0)
-        ////    {
-        ////        foreach (Piece piece in board.GetPiecesByColor(colorOfNextMove))
-        ////        {
-        ////            moves.AddRange(Piece.GetSimpleMoves(piece, board));
-        ////        }
-        ////    }
-
-        ////    return moves;
-        ////}
 
         /// <summary>
         /// gets all pieces moves - none-Queens
@@ -122,11 +134,6 @@ namespace Checkers.Model
 
             return moves;
         }
-
-        //protected virtual bool isQueen = false;
-        protected bool isQueen = false;
-        
-        public bool IsQueen { get { return isQueen; } }
 
         public override string ToString()
         {
@@ -156,38 +163,6 @@ namespace Checkers.Model
                 throw new CheckersException("incorrect input piece : length should be 3");
             PieceColor color = ParceColor(input.Substring(0, 1).ToUpper());
             return new Piece(color, Square.ParseCoordinates(input.Substring(1,2).ToUpper()));
-        }
-    }
-
-    public class Queen : Piece
-    {
-        public Queen(PieceColor color, Square square) : base(color, square) { isQueen = true; }
-
-        Queen(Piece piece) : this(piece.Color, piece.Coordinate) {}
-
-        //do not try to do it in for each
-        public static Piece MakeQueen(Piece piece)
-        {
-            if (piece == null)
-                throw new CheckersException("trying to construct Queen from uninitialized piece");
-            return new Queen(piece);
-        }
-
-        public override string ToString()
-        {
-            return base.ToString() + ((isQueen)? " (Queen)" : string.Empty);
-        }
-    }
-
-    //TODO: remove this fabric if not needed
-    public static class PieceFabric
-    {
-        public static Piece CreatePiece(bool isQueen, PieceColor color, Square square)
-        {
-            if (isQueen)
-                return new Queen(color, square);
-            else
-                return new Piece(color, square);
         }
     }
 }

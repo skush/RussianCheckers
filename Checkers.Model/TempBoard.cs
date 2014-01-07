@@ -11,12 +11,12 @@ namespace Checkers.Model
     /// </summary>
     class TempBoard : Board
     {
-        public IEnumerable<Piece> Captured;
+        //public IEnumerable<Piece> Captured;
 
         public TempBoard(Board board, Piece piece) : base(board)
         {
             pieces.Remove(piece);
-            Captured = new List<Piece>();
+            //Captured = new List<Piece>();
         }
     }
 }
