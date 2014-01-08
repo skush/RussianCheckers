@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Checkers.Model
 {
@@ -16,18 +12,18 @@ namespace Checkers.Model
 
     public static class DirectionUtils
     {
-        static List<Directions> frontDirections = new List<Directions>() { Directions.FrontLeft, Directions.FrontRight };
-        static List<Directions> backDirections = new List<Directions>() { Directions.BackLeft, Directions.BackRitht };
-        static List<Directions> allDirections = new List<Directions>() { Directions.FrontLeft, Directions.FrontRight, Directions.BackLeft, Directions.BackRitht };
+        static readonly List<Directions> FrontDirections = new List<Directions>() { Directions.FrontLeft, Directions.FrontRight };
+        static readonly List<Directions> BackDirections = new List<Directions>() { Directions.BackLeft, Directions.BackRitht };
+        static readonly List<Directions> AllDirections = new List<Directions>() { Directions.FrontLeft, Directions.FrontRight, Directions.BackLeft, Directions.BackRitht };
 
         static IEnumerable<Directions> GetFrontDirections()
         {
-            return frontDirections;
+            return FrontDirections;
         }
 
         static IEnumerable<Directions> GetBackDirections()
         {
-            return backDirections;
+            return BackDirections;
         }
 
         public static IEnumerable<Directions> GetDirections(PieceColor color)
@@ -39,7 +35,7 @@ namespace Checkers.Model
 
         public static IEnumerable<Directions> GetAllDirections()
         {
-            return allDirections;  //Enum.GetValues(typeof(Directions)).Cast...
+            return AllDirections;
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Checkers.Model;
 
 namespace RussianCheckers
@@ -27,13 +25,12 @@ namespace RussianCheckers
             }
 
             IEnumerable<Move> moves = Piece.GetAllMoves(board, nextMove);
-            if (moves.Count() == 0)
-                Console.WriteLine("No moves.");
-
             foreach (Move move in moves)
                 Console.WriteLine(move);
 
-            //Console.WriteLine(board);
+            if (!moves.Any())
+                Console.WriteLine("No moves.");
+
             Console.ReadKey();
         }
     }

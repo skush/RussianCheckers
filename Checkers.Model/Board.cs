@@ -37,10 +37,10 @@ namespace Checkers.Model
 
         public Piece GetPieceByCoordinate(Square coordinate)
         {
-            return Pieces.FirstOrDefault(p => p.Coordinate.X == coordinate.X && p.Coordinate.Y == coordinate.Y);
+            return Pieces.FirstOrDefault(p => p.Coordinate == coordinate);
         }
 
-        public Square GetSquare(Square start, Directions dir, int numOfSquaresToGo)
+        public Square? GetSquare(Square start, Directions dir, int numOfSquaresToGo)
         {
             int x = start.X;
             int y = start.Y;
@@ -63,27 +63,25 @@ namespace Checkers.Model
                     y -= numOfSquaresToGo;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("enum Direction, argument dir");
+                    throw new ArgumentOutOfRangeException("dir");
             }
             if (x >= 0 && x < Common.BoradLength && y >= 0 && y < Common.BoradLength)
-                return new Square(x, y);
+            {
+                return new Square {X = x, Y = y};
+            }
             return null;
         }
 
         public override string ToString()
         {
-            return string.Join("\n", pieces.OrderBy(p => p.Coordinate.ToString()));
+            return string.Join("; ", pieces.OrderBy(p => p.Coordinate.ToString()));
         }
 
         public static Board ParseBoard(string input)
         {
-            List<Piece> pieces = new List<Piece>();
-            string[] stringPieces = input.Split(';');
-            foreach (var p in stringPieces)
-            {
-                Piece newPiece = Piece.ParsePiece(p);
-                pieces.Add(newPiece);
-            }
+
+            var pieces = new List<Piece>();
+            pieces.AddRange(input.Split(';').Select(Piece.ParsePiece));
             return new Board(pieces);
         }
     }

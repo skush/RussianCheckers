@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Checkers.Model.Exceptions;
 
 namespace Checkers.Model
 {
     public class Piece
     {
-        protected PieceColor color;
+        private PieceColor color;
         public PieceColor Color
         {
             get { return color; }
         }
 
-        protected Square coordinate;
+        private Square coordinate;
         public Square Coordinate { get { return coordinate; } }
 
-        protected bool isQueen;
+        private bool isQueen;
         public bool IsQueen { get { return isQueen; } }
 
         public Piece(PieceColor color, Square square) : this(color, square, false) { }
@@ -36,14 +34,14 @@ namespace Checkers.Model
             foreach (Directions dir in Enum.GetValues(typeof(Directions)))
             {
                 Square start = (oriMove != null) ? oriMove.End : piece.Coordinate;
-                Square dest = board.GetSquare(start, dir, 2);
+                Square? dest = board.GetSquare(start, dir, 2);
 
-                if ((dest != null)
-                    && (board.GetPieceByCoordinate(dest) == null
+                if ((dest.HasValue)
+                    && (board.GetPieceByCoordinate(dest.Value) == null
                     //piece can still return back to its square
-                    || (dest.X == piece.Coordinate.X && dest.Y == piece.Coordinate.Y)))
+                    || (dest.Value == piece.Coordinate)))
                 {
-                    Piece capture = board.GetPieceByCoordinate(board.GetSquare(start, dir, 1));
+                    Piece capture = board.GetPieceByCoordinate(board.GetSquare(start, dir, 1).Value);
                     if (capture != null && capture.Color != piece.Color)
                     {
                         SequantialCapture newMove = null;
@@ -52,42 +50,39 @@ namespace Checkers.Model
                             if(!oriMove.Captured.Any(cp => cp.Coordinate == capture.Coordinate))
                             {
                                 newMove = new SequantialCapture(oriMove);
-                                newMove.MoveSequance.Add(new Square(dest.X, dest.Y));
+                                newMove.MoveSequance.Add(dest.Value);
                                 newMove.Captured.Add(capture);
                             }
                         }
                         else
                         {
-                            newMove = new SequantialCapture(start, new List<Square> { dest }, capture);
+                            newMove = new SequantialCapture(start, new List<Square> { dest.Value }, capture);
                         }
                         if (newMove != null)
                         {
-                            List<SequantialCapture> moves2add = GetCaptureMovesRecursive(piece, board, newMove);
-                            if (moves2add != null)
-                                moves.AddRange(moves2add);
+                            var moves2Add = GetCaptureMovesRecursive(piece, board, newMove);
+                            if (moves2Add != null)
+                                moves.AddRange(moves2Add);
                         }
                     }
                 }
             }
-            if (moves.Count() > 0)
+            if (moves.Any())
                 return moves;
-            else if(oriMove != null)
-                return new List<SequantialCapture>() { oriMove };
-            else
-                return new List<SequantialCapture>();
+            return oriMove != null ? new List<SequantialCapture>() { oriMove } : new List<SequantialCapture>();
         }
 
-        public static IEnumerable<Move> GetSimpleMoves(Piece piece, Board board)
+        private static IEnumerable<Move> GetSimpleMoves(Piece piece, Board board)
         {
-            Board tempBoard = new Board(board, piece);
-            List<Move> moves = new List<Move>();
-            IEnumerable<Directions> directions = DirectionUtils.GetDirections(piece.Color);
+            var moves = new List<Move>();
+            var directions = DirectionUtils.GetDirections(piece.Color);
+
             foreach (Directions dir in directions)
             {
-                Square dest = tempBoard.GetSquare(piece.Coordinate, dir, 1);
-                if ((dest != null) && (tempBoard.GetPieceByCoordinate(dest) == null))
+                Square? dest = board.GetSquare(piece.Coordinate, dir, 1);
+                if ((dest != null) && (board.GetPieceByCoordinate(dest.Value) == null))
                 {
-                   moves.Add(new Move(piece.Coordinate, dest));
+                    moves.Add(new Move(piece.Coordinate, dest.Value));
                 }
             }
             return moves;
@@ -101,7 +96,7 @@ namespace Checkers.Model
         /// <returns></returns>
         public static IEnumerable<Move> GetAllMoves(Board board, PieceColor colorOfNextMove)
         {
-            List<Move> moves = new List<Move>();
+            var moves = new List<Move>();
             foreach (Piece piece in board.GetPiecesByColor(colorOfNextMove))
             {
                 moves.AddRange(GetCaptureMovesRecursive(piece, board, null));
@@ -120,7 +115,7 @@ namespace Checkers.Model
 
         public override string ToString()
         {
-            return color.ToString() + ":" + coordinate.ToString();
+            return color + ":" + coordinate;
         }
 
         public static PieceColor ParceColor(string strColor)

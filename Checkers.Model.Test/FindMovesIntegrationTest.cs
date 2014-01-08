@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Checkers.Model.Test
@@ -18,111 +17,123 @@ namespace Checkers.Model.Test
 
         private class IntegrationTestResult
         {
-            public int sourseBoardNumber;
+            public int SourseBoardNumber;
             public TestBoardTypes TestType;
             public PieceColor NextMove;
-            public List<String> moves;
+            public List<String> Moves;
         }
 
-        static Dictionary<TestBoardTypes, List<Board>> boards;
+        static Dictionary<TestBoardTypes, List<Board>> _boards;
 
-        static List<IntegrationTestResult> expectedMoves;
+        static List<IntegrationTestResult> _expectedMoves;
 
         [ClassInitialize()]
         public static void IntegrationTestInit(TestContext context)
         {
-            boards = new Dictionary<TestBoardTypes, List<Board>>();
-            boards.Add(TestBoardTypes.Simple, new List<Board>{
-                Board.ParseBoard("wa1;bb2;bc3;wb4"),
-                Board.ParseBoard("wa1;bb2;bc3;wa7")
-            });
-            boards.Add(TestBoardTypes.MultiStep, new List<Board>{
-                Board.ParseBoard("we3;wg3;bf4;bf6") });
-            boards.Add(TestBoardTypes.Void, new List<Board>{
-                Board.ParseBoard("wb8;wd8;wf8;wh8;ba1;bc1;be1")
-            });
-
-            expectedMoves = new List<IntegrationTestResult>();
-            IntegrationTestResult result = new IntegrationTestResult()
+            _boards = new Dictionary<TestBoardTypes, List<Board>>
             {
-                sourseBoardNumber = 1,
+                {
+                    TestBoardTypes.Simple, new List<Board>
+                    {
+                        Board.ParseBoard("wa1;bb2;bc3;wb4"),
+                        Board.ParseBoard("wa1;bb2;bc3;wa7")
+                    }
+                },
+                {
+                    TestBoardTypes.MultiStep, new List<Board>
+                    {
+                        Board.ParseBoard("we3;wg3;bf4;bf6")
+                    }
+                },
+                {
+                    TestBoardTypes.Void, new List<Board>
+                    {
+                        Board.ParseBoard("wb8;wd8;wf8;wh8;ba1;bc1;be1")
+                    }
+                }
+            };
+
+            _expectedMoves = new List<IntegrationTestResult>();
+            var result = new IntegrationTestResult()
+            {
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.Simple,
                 NextMove = PieceColor.White,
-                moves = new List<String>() { "B4 - D2" }
+                Moves = new List<String>() { "B4 - D2" }
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
 
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 1,
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.Simple,
                 NextMove = PieceColor.Black,
-                moves = new List<String>() { "C3 - A5" }
+                Moves = new List<String>() { "C3 - A5" }
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
 
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 2,
+                SourseBoardNumber = 2,
                 TestType = TestBoardTypes.Simple,
                 NextMove = PieceColor.White,
-                moves = new List<String>() { "A7 - B8" }
+                Moves = new List<String>() { "A7 - B8" }
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
 
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 2,
+                SourseBoardNumber = 2,
                 TestType = TestBoardTypes.Simple,
                 NextMove = PieceColor.Black,
-                moves = new List<String>() { "B2 - C1", "C3 - D2" }
+                Moves = new List<String>() { "B2 - C1", "C3 - D2" }
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
 
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 1,
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.Void,
                 NextMove = PieceColor.White,
-                moves = new List<String>()
+                Moves = new List<String>()
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 1,
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.Void,
                 NextMove = PieceColor.Black,
-                moves = new List<String>()
+                Moves = new List<String>()
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
             
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 1,
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.MultiStep,
                 NextMove = PieceColor.White,
-                moves = new List<String>() { "E3 - G5 - E7", "G3 - E5 - G7" }
+                Moves = new List<String>() { "E3 - G5 - E7", "G3 - E5 - G7" }
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
 
             result = new IntegrationTestResult()
             {
-                sourseBoardNumber = 1,
+                SourseBoardNumber = 1,
                 TestType = TestBoardTypes.MultiStep,
                 NextMove = PieceColor.Black,
-                moves = new List<String>() { "F4 - D2", "F4 - H2"}
+                Moves = new List<String>() { "F4 - D2", "F4 - H2"}
             };
-            expectedMoves.Add(result);
+            _expectedMoves.Add(result);
         }
 
         private List<Board> GetTestBoards(TestBoardTypes testType)
         {
-             return boards[testType];
+             return _boards[testType];
         }
 
         private List<IntegrationTestResult> GetResults(TestBoardTypes testType, int boardNo)
         {
-            return expectedMoves.Where<IntegrationTestResult>(r => r.TestType == testType && r.sourseBoardNumber == boardNo).ToList();
+            return _expectedMoves.Where<IntegrationTestResult>(r => r.TestType == testType && r.SourseBoardNumber == boardNo).ToList();
         }
 
         private void AssertByType(TestBoardTypes testType)
@@ -132,7 +143,7 @@ namespace Checkers.Model.Test
             {
                 foreach (IntegrationTestResult res in GetResults(testType, boardCount))
                 {
-                    List<String> expected = res.moves;
+                    List<String> expected = res.Moves;
                     IEnumerable<Move> actual = Piece.GetAllMoves(b, res.NextMove);
                     Assert.AreEqual<int>(expected.Count(), actual.Count(), "count of moves");
                     int moveCount = 0;

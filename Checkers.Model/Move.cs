@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Checkers.Model
 {
@@ -30,7 +28,7 @@ namespace Checkers.Model
 
         public override string ToString()
         {
-            return Start.ToString() + " - " + End.ToString();
+            return Start + " - " + End;
         }
     }
 
@@ -38,29 +36,20 @@ namespace Checkers.Model
     {
         public IList<Square> MoveSequance;
 
-        public PieceColor Color;
-
         public IList<Piece> Captured;
 
         public SequantialCapture(Square start, IList<Square> sequence, Piece capturedPiece)
         {
             this.start = start;
             MoveSequance = sequence;
-            Captured = new List<Piece>();
-            Captured.Add(capturedPiece);
+            Captured = new List<Piece> {capturedPiece};
         }
 
         public SequantialCapture(SequantialCapture originalMove)
         {
-            this.start = new Square(originalMove.Start.X, originalMove.Start.Y);
-            var sequance = new List<Square>();
-            foreach (var point in originalMove.MoveSequance)
-                sequance.Add(point);
-            this.MoveSequance = sequance;
-            var captured = new List<Piece>();
-            foreach (var cp in originalMove.Captured)
-                captured.Add(cp);
-            this.Captured = captured;
+            start = originalMove.Start;
+            MoveSequance = originalMove.MoveSequance.ToList();
+            Captured = originalMove.Captured.ToList(); ;
         }
 
         public override Square End
@@ -74,12 +63,7 @@ namespace Checkers.Model
         public override string ToString()
         {
             // StringBuilder is not efficient here
-            String res = Start.ToString();
-            foreach (Square point in MoveSequance)
-            {
-                res += " - " + point.ToString();
-            }
-            return res;
+            return MoveSequance.Aggregate(Start.ToString(), (current, point) => current + (" - " + point.ToString()));
         }
     }
 }
